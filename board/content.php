@@ -74,7 +74,7 @@ if (!$row) {
     </div>
 
     <div class="content-box">
-        <?php echo nl2br(htmlspecialchars($row['content'])); ?>
+        <p><?php echo $row['content']; ?></p> <!-- XSS 실행 가능 -->
     </div>
 
     <?php if (!empty($row['file_name'])): ?>

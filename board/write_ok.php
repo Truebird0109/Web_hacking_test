@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id'])) {
 
 $user_id = $_SESSION['user_id'];
 $title = mysqli_real_escape_string($conn, $_POST['title']);
-$content = mysqli_real_escape_string($conn, $_POST['content']);
+$content = mysqli_real_escape_string($conn, $_POST['content']); // XSS 필터링 없음
 
 $sql = "INSERT INTO posts (user_id, title, content, created_at) VALUES ('$user_id', '$title', '$content', NOW())";
 if (mysqli_query($conn, $sql)) {

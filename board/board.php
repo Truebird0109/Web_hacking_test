@@ -7,12 +7,17 @@ $user_id = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : null;
 $user_display = isset($_SESSION['username']) ? $_SESSION['username'] : "Guest";
 $is_admin = isset($_SESSION['is_admin']) ? $_SESSION['is_admin'] : 0;
 
-// 검색 기능 (제목 + 내용 + 작성자)
+// 검색어 처리 (SQL 문법 오류 방지)
 $search = isset($_GET['search']) ? $_GET['search'] : '';
-$search_query = !empty($search) ? "WHERE posts.title LIKE '%$search%' OR posts.content LIKE '%$search%' OR users.username LIKE '%$search%'" : '';
+$search_safe = mysqli_real_escape_string($conn, $search);
 
-$sql = "SELECT posts.id, posts.title, users.username, posts.user_id, posts.created_at FROM posts 
-        JOIN users ON posts.user_id = users.id $search_query ORDER BY posts.id DESC";
+$search_query = !empty($search_safe) ? "WHERE posts.title LIKE '%$search_safe%' OR posts.content LIKE '%$search_safe%' OR users.username LIKE '%$search_safe%'" : '';
+
+$sql = "SELECT posts.id, posts.title, posts.content, users.username, posts.user_id, posts.created_at 
+        FROM posts 
+        JOIN users ON posts.user_id = users.id 
+        $search_query 
+        ORDER BY posts.id DESC";
 $result = mysqli_query($conn, $sql);
 ?>
 
@@ -86,7 +91,7 @@ $result = mysqli_query($conn, $sql);
     <!-- 🔝 상단 바 (로그인한 사용자 & 검색창 & 로그아웃 버튼) -->
     <div class="top-bar">
         <div class="user-info">
-            <strong>사용자:</strong> <?php echo htmlspecialchars($user_display); ?>
+            <strong>사용자:</strong> <?php echo $user_display; ?>
             <?php if ($is_admin) echo "(관리자)"; ?>
             
             <?php if ($user_id) { ?>
@@ -98,6 +103,13 @@ $result = mysqli_query($conn, $sql);
             <button type="submit" class="btn btn-primary">검색</button>
         </form>
     </div>
+
+    <!-- 📌 검색어 표시 (XSS 실행 가능) -->
+    <?php if (!empty($search)) { ?>
+        <div class="alert alert-info">
+            검색어: <?php echo $search; ?> <!-- XSS 실행 가능 -->
+        </div>
+    <?php } ?>
 
     <!-- 📄 글 목록 -->
     <div class="table-box">
