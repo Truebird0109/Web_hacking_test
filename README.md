@@ -1,8 +1,28 @@
--- 📌 1️⃣ 데이터베이스 및 테이블 생성
+### 📌 **README.md (정리된 SQL 코드 - Admin 만들기까지)**  
+```md
+# 📌 Web Hacking Test - Database Setup
+
+이 프로젝트는 웹 해킹 실습을 위한 **취약한 PHP 기반 게시판**입니다.  
+이 문서는 **데이터베이스 및 테이블 생성**, **기본 계정 추가**, **Admin 계정 설정**까지의 SQL 명령어를 정리한 것입니다.  
+
+---
+
+## 📌 1️⃣ 데이터베이스 및 테이블 생성  
+아래 명령어를 실행하여 **`bulletin_board`** 데이터베이스와 필요한 테이블을 생성하세요.  
+
+```sql
+-- 데이터베이스 생성 및 선택
 CREATE DATABASE bulletin_board;
 USE bulletin_board;
+```
 
--- 📌 2️⃣ users 테이블 (회원 관리)
+---
+
+## 📌 2️⃣ `users` 테이블 (회원 관리)
+회원 정보를 저장하는 `users` 테이블을 생성합니다.  
+- `is_admin` 컬럼을 추가하여 **관리자 여부(0 = 일반 사용자, 1 = 관리자)** 를 구별합니다.  
+
+```sql
 CREATE TABLE users (
     id INT AUTO_INCREMENT PRIMARY KEY,
     username VARCHAR(50) NOT NULL UNIQUE,
@@ -11,8 +31,15 @@ CREATE TABLE users (
     is_admin TINYINT(1) NOT NULL DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+```
 
--- 📌 3️⃣ posts 테이블 (게시판)
+---
+
+## 📌 3️⃣ `posts` 테이블 (게시판)
+게시글을 저장하는 `posts` 테이블을 생성합니다.  
+- `user_id`는 `users` 테이블과 연관되어 있으며, **작성자가 삭제되면 글도 삭제**되도록 설정합니다.  
+
+```sql
 CREATE TABLE posts (
     id INT AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
@@ -22,50 +49,38 @@ CREATE TABLE posts (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
+```
 
--- 📌 4️⃣ Admin 계정 추가
-INSERT INTO users (username, email, password, is_admin) 
-VALUES ('admin', 'admin@example.com', 'admin123', 1);
+---
 
--- 📌 5️⃣ 일반 사용자 계정 추가
+## 📌 4️⃣ 기본 계정 추가
+회원가입을 거치지 않고, **기본 사용자 계정을 미리 추가**할 수 있습니다.  
+
+```sql
+-- 일반 사용자 계정 추가
 INSERT INTO users (username, email, password, is_admin) 
 VALUES ('testuser', 'test@example.com', 'password123', 0);
+```
 
--- 📌 6️⃣ 게시글 작성
-INSERT INTO posts (user_id, title, content) 
-VALUES (1, '테스트 제목', '테스트 내용');
+---
 
--- 📌 7️⃣ 게시글 목록 조회
-SELECT posts.id, posts.title, users.username, posts.created_at 
-FROM posts 
-JOIN users ON posts.user_id = users.id 
-ORDER BY posts.id DESC;
+## 📌 5️⃣ Admin 계정 추가
+아래 SQL을 실행하면 **Admin 계정**을 추가할 수 있습니다.  
+- `is_admin` 값을 `1`로 설정하면 **모든 게시글을 수정/삭제할 수 있는 관리자 권한**을 갖게 됩니다.  
 
--- 📌 8️⃣ 게시글 상세 조회
-SELECT posts.*, users.username 
-FROM posts 
-JOIN users ON posts.user_id = users.id 
-WHERE posts.id = 1;
+```sql
+INSERT INTO users (username, email, password, is_admin) 
+VALUES ('admin', 'admin@example.com', 'admin123', 1);
+```
 
--- 📌 9️⃣ 게시글 수정
-UPDATE posts 
-SET title = '수정된 제목', content = '수정된 내용' 
-WHERE id = 1;
+✅ **이제 `admin / admin123` 계정으로 로그인하면 관리자 권한을 가질 수 있습니다.**  
+✅ **일반 사용자는 자신의 글만 수정/삭제 가능하며, Admin은 모든 글을 수정/삭제할 수 있습니다.**  
 
--- 📌 🔟 게시글 삭제
-DELETE FROM posts WHERE id = 1;
+---
 
--- 📌 1️⃣1️⃣ SQL 인젝션 실습 (비밀번호 없이 로그인)
--- 아이디 입력: admin' OR '1'='1
--- SQL 변형:
-SELECT * FROM users WHERE username = 'admin' OR '1'='1' AND password = '아무거나';
+## 🚀 **이제 데이터베이스가 완벽하게 설정되었습니다!**
+📌 **추가적으로 SQL 인젝션 실습이나 기타 기능을 원하면 README를 업데이트하세요.**  
+📌 **데이터베이스를 수정하거나 초기화할 때 위 SQL을 다시 실행하면 됩니다.**  
+```
 
--- 📌 1️⃣2️⃣ SQL 인젝션 (관리자 계정 탈취)
--- 아이디 입력: ' UNION SELECT 1, 'admin', 'adminpass', 1 --
--- SQL 변형:
-SELECT * FROM users WHERE username = '' UNION SELECT 1, 'admin', 'adminpass', 1 --' AND password = '아무거나';
-
--- 📌 1️⃣3️⃣ SQL 인젝션 (비밀번호 체크 무력화)
--- 아이디 입력: admin' --
--- SQL 변형:
-SELECT * FROM users WHERE username = 'admin' --' AND password = '아무거나';
+---
